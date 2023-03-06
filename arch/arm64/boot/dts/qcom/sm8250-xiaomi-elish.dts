@@ -7,6 +7,7 @@
 
 #include <dt-bindings/arm/qcom,ids.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include <dt-bindings/phy/phy.h>
 #include "sm8250.dtsi"
 #include "pm8150.dtsi"
 #include "pm8150b.dtsi"
@@ -65,6 +66,7 @@
 		charge-full-design-microamp-hours = <4300000>;
 	};
 
+	lcd_vddpos_5p5:
 	bl_vddpos_5p5: bl-vddpos-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "bl_vddpos_5p5";
@@ -76,6 +78,7 @@
 		regulator-boot-on;
 	};
 
+	lcd_vddneg_5p5:
 	bl_vddneg_5p5: bl-vddneg-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "bl_vddneg_5p5";
@@ -496,6 +499,78 @@
 	status = "okay";
 };
 
+&dsi0 {
+	vdda-supply = <&vreg_l9a_1p2>;
+	qcom,dual-dsi-mode;
+	qcom,master-dsi;
+	qcom,sync-dual-dsi;
+	status = "okay";
+
+	panel@0 {
+		compatible = "xiaomi,elish-csot-nt36523";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
+
+		vddio-supply = <&vreg_l14a_1p88>;
+		//vddpos-supply = <&lcd_vddpos_5p5>;
+		//vddneg-supply = <&lcd_vddneg_5p5>;
+
+		backlight = <&backlight>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				panel_in_0: endpoint {
+					remote-endpoint = <&dsi0_out>;
+				};
+			};
+
+			port@1{
+				reg = <1>;
+				panel_in_1: endpoint {
+					remote-endpoint = <&dsi1_out>;
+				};
+			};
+
+		};
+	};
+};
+
+&dsi0_out {
+	data-lanes = <0 1 2>;
+	remote-endpoint = <&panel_in_0>;
+};
+
+&dsi0_phy {
+	vdds-supply = <&vreg_l5a_0p88>;
+	phy-type = <PHY_TYPE_CPHY>;
+	status = "okay";
+};
+
+&dsi1 {
+	vdda-supply = <&vreg_l9a_1p2>;
+	qcom,dual-dsi-mode;
+	qcom,sync-dual-dsi;
+	/* DSI1 is slave, so use DSI0 clocks */
+	assigned-clock-parents = <&dsi0_phy 0>, <&dsi0_phy 1>;
+	status = "okay";
+};
+
+&dsi1_out {
+	data-lanes = <0 1 2>;
+	remote-endpoint = <&panel_in_1>;
+};
+
+&dsi1_phy {
+	vdds-supply = <&vreg_l5a_0p88>;
+	phy-type = <PHY_TYPE_CPHY>;
+	status = "okay";
+};
+
 &gmu {
 	status = "okay";
 };
@@ -558,6 +633,10 @@
 		reg = <0x55>;
 		monitored-battery = <&battery_l>;
 	};
+};
+
+&mdss {
+	status = "okay";
 };
 
 &pcie0 {
