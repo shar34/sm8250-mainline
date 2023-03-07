@@ -38,6 +38,7 @@
 	};
 
 	chosen {
+		bootargs = "clk_ignore_unused";
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
