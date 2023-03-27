@@ -3,8 +3,6 @@
  * Copyright (c) 2022, 2023 Jianhua Lu <lujianhua000@gmail.com>
  */
 
-/dts-v1/;
-
 #include <dt-bindings/arm/qcom,ids.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include <dt-bindings/phy/phy.h>
@@ -25,8 +23,6 @@
 /delete-node/ &xbl_aop_mem;
 
 / {
-	model = "Xiaomi Mi Pad 5 Pro";
-	compatible = "xiaomi,elish", "qcom,sm8250";
 	classis-type = "tablet";
 
 	/* required for bootloader to select correct board */
@@ -507,17 +503,15 @@
 	qcom,sync-dual-dsi;
 	status = "okay";
 
-	panel@0 {
-		compatible = "xiaomi,elish-csot-nt36523";
+	display_panel: panel@0 {
 		reg = <0>;
 
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
-
 		vddio-supply = <&vreg_l14a_1p88>;
-		//vddpos-supply = <&lcd_vddpos_5p5>;
-		//vddneg-supply = <&lcd_vddneg_5p5>;
 
 		backlight = <&backlight>;
+
+		status = "disabled";
 
 		ports {
 			#address-cells = <1>;
@@ -696,7 +690,7 @@
 
 &slpi {
 	firmware-name = "qcom/sm8250/xiaomi/elish/slpi.mbn";
-	status = "okay";
+	status = "disabled";
 };
 
 &spi4 {
