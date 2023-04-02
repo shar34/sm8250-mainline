@@ -31,13 +31,17 @@
 
 / {
 	model = "OnePlus 8 Pro (instantnoodlep)";
-	compatible = "qcom,kona", "qcom,sm8250";
+	compatible = "oneplus,instantnoodlep", "qcom,kona", "qcom,sm8250";
 	chassis-type = "handset";
 
-    qcom,msm-id = <356 0x10000>,
+    qcom,msm-id = <0x164 0x10000>,
                     <0x164 0x20001>;
-	qcom,board-id = <8 0>,
+	qcom,board-id = <0x08 0x00>,
                     <0x00 0x00>;
+
+	aliases {
+		hsuart0 = &uart6;
+	};
 
 	chosen {
 		#address-cells = <2>;
@@ -47,10 +51,10 @@
 
 		framebuffer0: framebuffer@9c000000 {
 			compatible = "simple-framebuffer";
-			reg = <0x0 0x9c000000 0x0 (1440 * 3168 * 3)>;
-			width = <1440>;
-			height = <3168>;
-			stride = <(1440 * 3)>;
+			reg = <0x0 0x9c000000 0x0 (1080 * 2376 * 4)>;
+			width = <1080>;
+			height = <2376>;
+			stride = <(1080 * 4)>;
 			format = "a8r8g8b8";
 		};
 	};
@@ -125,7 +129,7 @@
 		};
 
 		adsp_mem: memory@91b00000 {
-			reg = <0x0 0x91b00000 0x0 0x1d00000>;
+			reg = <0x00 0x91b00000 0x00 0x2500000>;
 			no-map;
 		};
 
@@ -139,9 +143,18 @@
 			no-map;
 		};
 
-		cont_splash_mem: memory@94000000 {
+        cont_splash_mem: memory@9c000000 {
 			reg = <0x0 0x9c000000 0x0 0x2300000>;
 			no-map;
+        };
+
+		ramoops@b0000000 {
+			compatible = "ramoops";
+			reg = <0x00 0xb0000000 0x00 0x400000>;
+			record-size = <0x40000>;
+			console-size = <0x40000>;
+			ecc-size = <0x00>;
+            no-map;
 		};
 	};
 
@@ -182,10 +195,19 @@
 		vddpcie2-supply = <&vreg_s5a_1p9>;
 		vddio-supply = <&vreg_s4a_1p8>;
 
-		pinctrl-names = "default";
-		pinctrl-0 = <&wlan_en_state>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&wlan_en_active>;
+		pinctrl-1 = <&wlan_en_sleep>;
 
 		wlan-en-gpios = <&tlmm 20 GPIO_ACTIVE_HIGH>;
+	};
+
+	battery: battery {
+		compatible = "simple-battery";
+
+		charge-full-design-microamp-hours = <4410000>;
+        energy-full-design-microwatt-hours = <17060000>;
+		voltage-max-design-microvolt = <4350000>;
 	};
 };
 
@@ -487,6 +509,15 @@
 	status = "okay";
 };
 
+&cdsp {
+	firmware-name = "postmarketos/cdsp.mbn";
+	status = "okay";
+};
+
+&dispcc {
+       status = "disabled";
+};
+
 &dsi0 {
 	vdda-supply = <&vreg_l9a_1p2>;
 	qcom,dual-dsi-mode;
@@ -532,6 +563,48 @@
 	status = "okay";
 };
 
+&gpu {
+	status = "disabled";
+};
+
+&i2c1 {
+    status = "okay";
+
+    nfc@28 {
+        compatible = "nxp,nxp-nci-i2c";
+        reg = <0x28>;
+
+        interrupt-parent = <&tlmm>;
+        interrupts = <0x6f IRQ_TYPE_LEVEL_HIGH>;
+
+        enable-gpios = <&tlmm 83 GPIO_ACTIVE_HIGH>,
+                        <&tlmm 110 GPIO_ACTIVE_HIGH>;
+    };
+};
+
+&i2c5 {
+    status = "okay";
+
+    charger@66 {
+        compatible = "ti,bq25980";
+        status = "ok";
+        reg = <0x66>;
+        interrupt-parent = <&tlmm>;
+        interrupts = <0x0f 0x00>;
+        monitored-battery = <&battery>;
+    };
+};
+
+&i2c16 {
+    status = "okay";
+
+    smart_battery: fuel-gauge@55 {
+        compatible = "ti,bq27541";
+        reg = <0x55>;
+        monitored-battery = <&battery>;
+    };
+};
+
 &i2c13 {
 	clock-frequency = <400000>;
     status = "okay";
@@ -541,18 +614,25 @@
 		reg = <0x48>;
 		interrupt-parent = <&tlmm>;
         interrupts = <0x27 0x2008>;
-        /* mline 6871 downstream pulled dts */
+
         vdd-supply = <&vreg_l13a_ts_3p0>;
-        /* mline 7077 downstream pulled dts */
 		avdd-supply = <&vreg_l1c_1p8>;
 
-		pinctrl-names = "default";
-		//pinctrl-0 = <39 38>;
-		pinctrl-0 = <2 &qup_spi13_cs_gpio &tp_rst_suspend>;
+        touchscreen-size-x = <1440>;
+        touchscreen-size-y = <3168>;
+
+		pinctrl-names = "default", "suspend";
+		pinctrl-0 = <&ts_int_active>;
+        pinctrl-1 = <&ts_rst_suspend>;
 	};
 };
 
 &mdss {
+	status = "okay";
+};
+
+&slpi {
+	firmware-name = "postmarketos/slpi.mbn";
 	status = "okay";
 };
 
@@ -631,7 +711,7 @@
 &tlmm {
 	gpio-reserved-ranges = <28 4>, <40 4>;
 
-    bt_en_state: bt-default-state {
+    bt_en_active: bt-default-state {
 		bt-en {
 			pins = "gpio21";
 			function = "gpio";
@@ -642,7 +722,16 @@
 		};
 	};
 
-	wlan_en_state: wlan-default-state {
+    bt_en_sleep: bt-sleep-state {
+        pins = "gpio21";
+        function = "gpio";
+
+        drive-strength = <0x02>;
+        output-low;
+        bias-pull-down;
+    };
+
+	wlan_en_active: wlan-default-state {
 		wlan-en {
 			pins = "gpio20";
 			function = "gpio";
@@ -653,7 +742,23 @@
 		};
 	};
 
-	tp_rst_suspend: tp_rst_suspend {
+    wlan_en_sleep: wlan-sleep-state {
+        pins = "gpio20";
+        function = "gpio";
+
+        drive-strength = <16>;
+        output-low;
+        bias-pull-down;
+    };
+
+	ts_int_active: ts-int-active-state {
+        pins = "gpio38", "gpio39";
+        function = "gpio";
+        drive-strength = <2>;
+        bias-pull-up;
+	};
+
+	ts_rst_suspend: ts-rst-suspend {
 		pins = "gpio38";
 		function = "gpio";
 		drive-strength = <0x02>;
@@ -666,8 +771,9 @@
 
 	bluetooth {
 		compatible = "qcom,qca6390-bt";
-		pinctrl-names = "default";
-		pinctrl-0 = <&bt_en_state>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&bt_en_active>;
+		pinctrl-1 = <&bt_en_sleep>;
 
 		power-domains = <&qca639x>;
 		enable-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
@@ -708,5 +814,33 @@
 	vdda-pll-supply = <&vreg_l5a_0p88>;
 	vdda18-supply = <&vreg_l12a_1p8>;
 	vdda33-supply = <&vreg_l2a_3p1>;
+	status = "okay";
+};
+
+&usb_2 {
+	status = "okay";
+};
+
+&usb_2_dwc3 {
+	dr_mode = "host";
+};
+
+&usb_2_hsphy {
+	status = "okay";
+
+	vdda-pll-supply = <&vreg_l5a_0p88>;
+	vdda33-supply = <&vreg_l2a_3p1>;
+	vdda18-supply = <&vreg_l12a_1p8>;
+};
+
+&usb_2_qmpphy {
+	status = "okay";
+
+	vdda-phy-supply = <&vreg_l9a_1p2>;
+	vdda-pll-supply = <&vreg_l18a_0p92>;
+};
+
+&venus {
+	firmware-name = "postmarketos/venus.mbn";
 	status = "okay";
 };
