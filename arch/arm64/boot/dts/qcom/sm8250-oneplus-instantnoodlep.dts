@@ -34,10 +34,8 @@
 	compatible = "oneplus,instantnoodlep", "qcom,kona", "qcom,sm8250";
 	chassis-type = "handset";
 
-    qcom,msm-id = <0x164 0x10000>,
-                    <0x164 0x20001>;
-	qcom,board-id = <0x08 0x00>,
-                    <0x00 0x00>;
+	qcom,msm-id = <0x164 0x10000>, <0x164 0x20001>;
+	qcom,board-id = <0x08 0x00>, <0x00 0x00>;
 
 	aliases {
 		hsuart0 = &uart6;
@@ -47,7 +45,7 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-        stdout-path = "framebuffer0";
+		stdout-path = "framebuffer0";
 
 		framebuffer0: framebuffer@9c000000 {
 			compatible = "simple-framebuffer";
@@ -62,10 +60,19 @@
 	gpio_keys: gpio-keys {
 		compatible = "gpio-keys";
 
-        vol-up {
+		vol-up {
 			label = "Volume Up";
 			gpios = <&pm8150_gpios 6 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_VOLUMEUP>;
+			debounce-interval = <15>;
+			linux,can-disable;
+			gpio-key,wakeup;
+		};
+
+		vol-down {
+			label = "Volume Down";
+			linux,code = <KEY_VOLUMEDOWN>;
+			gpios = <&pm8150_gpios 7 GPIO_ACTIVE_LOW>;
 			debounce-interval = <15>;
 			linux,can-disable;
 			gpio-key,wakeup;
@@ -143,10 +150,10 @@
 			no-map;
 		};
 
-        cont_splash_mem: memory@9c000000 {
-			reg = <0x0 0x9c000000 0x0 0x2300000>;
-			no-map;
-        };
+		cont_splash_mem: memory@9c000000 {
+				reg = <0x0 0x9c000000 0x0 0x2300000>;
+				no-map;
+		};
 
 		ramoops@b0000000 {
 			compatible = "ramoops";
@@ -154,7 +161,7 @@
 			record-size = <0x40000>;
 			console-size = <0x40000>;
 			ecc-size = <0x00>;
-            no-map;
+			no-map;
 		};
 	};
 
@@ -182,11 +189,11 @@
 		regulator-always-on;
 	};
 
-    qca639x: qca639x {
+	qca639x: qca639x {
 		compatible = "qcom,qca6390";
 		#power-domain-cells = <0>;
         
-        vddaon-supply = <&vreg_s6a_0p95>;
+		vddaon-supply = <&vreg_s6a_0p95>;
 		vddpmu-supply = <&vreg_s2f_0p95>;
 		vddrfa1-supply = <&vreg_s2f_0p95>;
 		vddrfa2-supply = <&vreg_s8c_1p3>;
@@ -206,7 +213,7 @@
 		compatible = "simple-battery";
 
 		charge-full-design-microamp-hours = <4410000>;
-        energy-full-design-microwatt-hours = <17060000>;
+		energy-full-design-microwatt-hours = <17060000>;
 		voltage-max-design-microvolt = <4350000>;
 	};
 };
@@ -607,23 +614,23 @@
 
 &i2c13 {
 	clock-frequency = <400000>;
-    status = "okay";
+	status = "okay";
 
 	touchscreen@48 {
 		compatible = "samsung,s6sy761";
 		reg = <0x48>;
 		interrupt-parent = <&tlmm>;
-        interrupts = <0x27 0x2008>;
+		interrupts = <0x27 0x2008>;
 
-        vdd-supply = <&vreg_l13a_ts_3p0>;
+		vdd-supply = <&vreg_l13a_ts_3p0>;
 		avdd-supply = <&vreg_l1c_1p8>;
 
-        touchscreen-size-x = <1440>;
-        touchscreen-size-y = <3168>;
+		touchscreen-size-x = <1440>;
+		touchscreen-size-y = <3168>;
 
 		pinctrl-names = "default", "suspend";
 		pinctrl-0 = <&ts_int_active>;
-        pinctrl-1 = <&ts_rst_suspend>;
+		pinctrl-1 = <&ts_rst_suspend>;
 	};
 };
 
@@ -675,6 +682,14 @@
 		input-enable;
 		bias-pull-up;
 	};
+
+	vol_down_n: vol-down-n-state {
+		pins = "gpio7";
+		function = "normal";
+		power-source = <1>;
+		input-enable;
+		bias-pull-up;
+	};
 };
 
 &pon_pwrkey {
@@ -711,7 +726,7 @@
 &tlmm {
 	gpio-reserved-ranges = <28 4>, <40 4>;
 
-    bt_en_active: bt-default-state {
+	bt_en_active: bt-default-state {
 		bt-en {
 			pins = "gpio21";
 			function = "gpio";
@@ -722,14 +737,14 @@
 		};
 	};
 
-    bt_en_sleep: bt-sleep-state {
-        pins = "gpio21";
-        function = "gpio";
+	bt_en_sleep: bt-sleep-state {
+		pins = "gpio21";
+		function = "gpio";
 
-        drive-strength = <0x02>;
-        output-low;
-        bias-pull-down;
-    };
+		drive-strength = <0x02>;
+		output-low;
+		bias-pull-down;
+	};
 
 	wlan_en_active: wlan-default-state {
 		wlan-en {
@@ -742,20 +757,20 @@
 		};
 	};
 
-    wlan_en_sleep: wlan-sleep-state {
-        pins = "gpio20";
-        function = "gpio";
+	wlan_en_sleep: wlan-sleep-state {
+		pins = "gpio20";
+		function = "gpio";
 
-        drive-strength = <16>;
-        output-low;
-        bias-pull-down;
-    };
+		drive-strength = <16>;
+		output-low;
+		bias-pull-down;
+	};
 
 	ts_int_active: ts-int-active-state {
-        pins = "gpio38", "gpio39";
-        function = "gpio";
-        drive-strength = <2>;
-        bias-pull-up;
+		pins = "gpio38", "gpio39";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
 	};
 
 	ts_rst_suspend: ts-rst-suspend {
