@@ -183,6 +183,8 @@
 		compatible = "linux,extcon-usb-gpio";
 		id-gpio = <&tlmm 91 GPIO_ACTIVE_HIGH>;
 		vbus-gpio = <&pm8150_gpios 10 GPIO_ACTIVE_HIGH>;
+		vbus-out-gpio = <&pm8150_gpios 9 GPIO_ACTIVE_HIGH>;
+
 		pinctrl-0 = <&keyboard_active &usb_2_vbus_det_n>;
 		pinctrl-names = "default";
 	};
