@@ -179,6 +179,17 @@
 		};
 	};
 
+	xiaomi_keyboard {
+		compatible = "xiaomi,keyboard";
+		pinctrl-names = "pm_kb_active", "pm_kb_suspend";
+		pinctrl-0 = <&xiaomi_keyboard_active>;
+		pinctrl-1 = <&xiaomi_keyboard_suspend>;
+		xiaomi-keyboard,rst-gpio = <&tlmm 141 0x00>;
+		xiaomi-keyboard,in-irq-gpio = <&tlmm 83 0x2001>;
+		xiaomi-keyboard,vdd-gpio = <&tlmm 127 0x00>;
+		status = "okay";
+	};
+
 	extcon_usb: extcon-usb {
 		compatible = "linux,extcon-usb-gpio";
 		id-gpio = <&tlmm 91 GPIO_ACTIVE_HIGH>;
@@ -187,6 +198,7 @@
 
 		pinctrl-0 = <&keyboard_active &usb_2_vbus_det_n>;
 		pinctrl-names = "default";
+		status = "disabled";
 	};
 };
 
@@ -1001,6 +1013,34 @@
 			drive-strength = <8>;
 			bias-disable;
 			output-high;
+		};
+	};
+
+	xiaomi_keyboard_mcu {
+		xiaomi_keyboard_suspend: xiaomi_keyboard_suspend {
+			mux {
+				pins = "gpio155";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio155";
+				drive-strength = <8>;
+				bias-pull-down;
+			};
+		};
+
+		xiaomi_keyboard_active: xiaomi_keyboard_active {
+			mux {
+				pins = "gpio155";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio155";
+				drive-strength = <8>;
+				bias-pull-up;
+			};
 		};
 	};
 };
